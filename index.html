@@ -1,0 +1,147 @@
+  <!DOCTYPE html>
+    
+   <html>
+
+<head>   
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+       
+    
+    
+<style>
+    .background{
+        
+        
+        
+    }
+   .cardstyle {
+  border: 5px outset #88ccd9;
+  background-color: #fbf7f5;
+  text-align: center;
+       max-width: 500px; /* Limit the max width */
+  margin:1px auto; 
+} 
+    .tittleL{
+        border: 5px outset ;
+  background-color: #fbf7f5;
+  text-align: center;
+        float: left;
+  width: 200px;
+  border: 3px solid #96ceb4;
+  padding: 10px;
+
+        text-align: center; 
+        
+        
+    }
+    
+    
+        
+.tittle{
+        border: 5px outset ;
+  background-color: #fbf7f5;
+  text-align: center;
+        float: left;
+ width: 200px;
+  border: 3px solid #96ceb4;
+  padding: 10px;
+
+        text-align: center; 
+        
+    }
+    
+    
+    .btn{
+        
+         border: 5px outset #ff9c3e ;
+        
+    }
+    
+    .g{
+        background-color: 		#e4f9fd;
+         text-align: center; 
+           border: 5px outset #fdf3c9 ;
+        
+    }
+</style>
+       
+       </head>
+    <body>
+       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+    
+        
+        
+        
+        <h1 class = "g">
+        GYMDAY
+        </h1>
+ <h1 class= "tittleL" >  Sign Up </h1>    
+        
+        <br>
+    <div class= "cardstyle">
+        
+       <form action="http://localhost:3000/register" method="post">
+        <label for="username">New username:</label>
+        <input type="text" id="newusername" name="newusername" required>
+        <label for="register-password">Password:</label>
+        <input type="password" id="register-password" name="password" required><br>
+        <button type="submit" class = "btn">Submit</button>
+    </form> 
+        
+            <br>
+    </div>    
+        
+        
+   <h1 class= "tittle"> Login </h1>    
+        
+    <br>
+    
+    <div class= "cardstyle">
+         <form id="loginForm" action="http://localhost:3000/login" method="post">
+
+        <label for="username">Username:</label>
+        <input type="text" 
+               id="username" name="username" required><br>
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" name="password" required><br>
+        <button type="submit" class = "btn" >Login</button>
+    </form>  
+        
+    </div>
+    
+ 
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function (event) {
+    event.preventDefault();  // Prevent default form submission
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('login-password').value;
+
+    // Send login data to the server
+    fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+    if (data.message === 'Login successful') {  // Check the message from server
+        sessionStorage.setItem('username', username);  // Store username in sessionStorage
+        window.location.href = '/welcome';  // Redirect to another page after successful login
+    } else {
+        alert('Invalid credentials');  // Display error if login fails
+    }
+})
+    .catch(error => {
+        console.error('Login error:', error);
+    });
+});
+
+</script>
+      </body>    
+</html> 
+    
+  
+
