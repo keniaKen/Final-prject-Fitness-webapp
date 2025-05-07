@@ -84,7 +84,7 @@
         <input type="text" id="newusername" name="newusername" required>
         <label for="register-password">Password:</label>
         <input type="password" id="register-password" name="password" required><br>
-        <button type="submit" class = "btn">Submit</button>
+        <button onclick="regsAlert()" type="submit" class = "btn">Submit</button>
     </form> 
         
             <br>
@@ -110,34 +110,89 @@
     
  
 <script>
-  document.getElementById('loginForm').addEventListener('submit', function (event) {
-    event.preventDefault();  // Prevent default form submission
-
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('login-password').value;
-
-    // Send login data to the server
-    fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
-    if (data.message === 'Login successful') {  // Check the message from server
-        sessionStorage.setItem('username', username);  // Store username in sessionStorage
-        window.location.href = '/welcome';  // Redirect to another page after successful login
-    } else {
-        alert('Invalid credentials');  // Display error if login fails
+    
+    function regsAlert(){
+        
+       alert("Sign up sucessful:Please Login with your Username and Password");
     }
-})
-    .catch(error => {
-        console.error('Login error:', error);
-    });
-});
+     
+    
+//    
+// fetch('http://localhost:3000/register', {
+//  method: 'POST',
+//  headers: {
+//    'Content-Type': 'application/json'
+//  },
+//  body: JSON.stringify({ username, password }) // Example
+//})
+//.then(res => res.json())
+//.then(data => {
+//  if (data.success) {
+//      alert('Register successful! Login below');
+//      
+//    window.location.reload = '/';  //  Redirect to welcome
+//  } else {
+//    alert(data.message);
+//     
+//  }
+//     
+//     
+////    
+////     
+////     
+////})
+//.catch(err => {
+//  console.error('Registration error:', err);
+//});   
+//    
+//    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//  document.getElementById('loginForm').addEventListener('submit', function (event) {
+//    event.preventDefault();  // Prevent default form submission
+//
+//    const username = document.getElementById('username').value;
+//    const password = document.getElementById('login-password').value;
+//
+//      
+//    // Send login data to the server
+//    fetch('http://localhost:3000/login', {
+//        method: 'POST',
+//        headers: {
+//            'Content-Type': 'application/json'
+//        },
+//        body: JSON.stringify({ username, password })
+//    })
+//    .then(response => response.json())
+//    .then(data => {
+//        console.log(data);
+//    if (data.message === 'Login successful') {  // Check the message from server
+//        console.log("username: " +username)
+//          sessionStorage.setItem('username', username); // Save username to sessionStorage
+//      window.location.href = '/welcome';
+//   
+//    } else {
+//        alert('Invalid credentials');  // Display error if login fails
+//    }
+//})
+//   .catch(error => {
+//       // console.error('Login error:', error);
+//    });
+//});
 
 </script>
       </body>    

@@ -121,7 +121,7 @@
       </div>
     </div>
   </nav>
- <h1 class= "checkedin" > Hi, ken  </h1 >    
+ <h1 class="checkedin">Hi, <span id="usernameDisplay"></span></h1>   
         <br>
         
         <h1 class =  "g">
@@ -129,7 +129,7 @@
         </h1>
         <div class="container">
         <div class="rightside">
-        <h3> Next billing date: 11/25/2026</h3>
+<h3> Next billing date: <span id="current-month"></span> <span id="nextbilling-day"></span> <span id="current-year"></span> </h3>
          </div> 
         </div> 
         <br>
@@ -176,31 +176,31 @@
     <br>
     
     <div class= "cardstyle">
-       <form id="preferenceForm" class="p-4 border rounded bg-light" style="max-width: 500px; margin: auto;">
+       <form action ="/submit-preference" method = "POST" class="p-4 border rounded bg-light" style="max-width: 500px; margin: auto;">
   <h4 class="mb-3">Select Your Preference</h4>
 
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="preference" id="gymdayNorth" value="Option 1" required>
+    <input class="form-check-input" type="radio" name="gymPreference" id="gymdayNorth" value="Option 1" required>
     <label class="form-check-label" for="gymdayNorth">
      Gymday North
     </label>
   </div>
 
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="preference" id="gymdayCentral" value="Option 2">
+    <input class="form-check-input" type="radio" name="gymPreference" id="gymdayCentral" value="Option 2">
     <label class="form-check-label" for="gymdayCentral">
       Gymday Central
     </label>
   </div>
 
   <div class="form-check">
-    <input class="form-check-input" type="radio" name="preference" id="gymdayWest" value="Option 3">
+    <input class="form-check-input" type="radio" name="gymPreference" id="gymdayWest" value="Option 3">
     <label class="form-check-label" for="gymdayWest">
      Gymday West
     </label>
   </div>
 
-  <button type="submit" class="btn3">Submit</button>
+  <button onclick="onclickGym()"type="submit" class="btn3">Submit</button>
 </form>
         
     </div>
@@ -213,62 +213,119 @@
        
               
        
-<form id="activityForm">
+<form action = "/ameneties" method= "POST" id="amenitiesForm" >
   <h5>Select Ammenties:</h5>
 
   <div>
-    <input type="checkbox" id="wifi" name="preferences" value="Wi-Fi">
-    <label for="wifi">Wi-Fi</label>
+    <input type="checkbox" id="wifi" name="amenities[]" value="Wi-Fi access" data-price="10">
+    <label for="wifi">Wi-Fi - $10</label>
   </div>
 
   <div>
-    <input type="checkbox" id="locker" name="preferences" value="locker">
-    <label for="locker">locker</label>
+    <input type="checkbox" id="locker" name="amenities[]" value="locker access" data-price="5">
+    <label for="locker">Locker -$5</label>
   </div>
 
   <div>
-    <input type="checkbox" id="pool" name="preferences" value="pool">
-    <label for="pool"> Pool</label>
+    <input type="checkbox" id="pool" name="amenities[]" value="pool Access" data-price="20">
+    <label for="pool"> Pool-$20</label>
   </div>
 
+     <p>Total: $<span id="total">0</span></p>
   <button class = "btn3" type="submit">Submit</button>
+     <button type="button" id="checkoutBtn">Check Out</button>
+
 </form>
     </div>
         
         
         
         
-        <script>
+        <script> 
+            function onclickGym(){
+                
+    const selectedGym = document.querySelector('input[name="gymPreference"]:checked');
+    if (selectedGym) {
+        alert("Thank you for choosing this Gym: " + selectedGym.nextElementSibling.innerText);
+    } else {
+        alert("Please select a gym.");
+    }
+            }
+            
+            
+            
+       let currUsername = "";
+       document.getElementById('checkoutBtn').addEventListener('click', () => {
+  window.location.href = 'checkout.html';  // Adjust the file name/path as needed
+});
+            async function startup(){
+                
+              await  showUsername();
+                 updateDemo();
+            }
+            startup();
+            
+          async function  showUsername() {
+        await fetch('/api/username')
+      .then(response => {
+        if (!response.ok) throw new Error('Not logged in');
+        return response.json();
+      })
+               
+          .then(data => {
+        const display = document.getElementById('usernameDisplay');
+        display.textContent = data.username || 'Guest';
+        currUsername= data.username;
+      })     
+     
+       .catch(error => {
+        console.error('Error fetching username:', error);
+        const display = document.getElementById('usernameDisplay');
+        if (display) display.textContent = 'Guest';
+      });
+  }
+
+//  window.addEventListener('DOMContentLoaded', showUsername);         
+//               
+
+            
+            
+            
+            
+            
+            
+            
      function updateDemo() {
-     console.log(sessionStorage.getItem('username'));
-            const username = sessionStorage.getItem('username');
+//      const username = currUsername;
+      console.log("username: " + currUsername );
          
-  if (!username) {
+  if (!currUsername) {
     console.error('Username is not defined');
     alert('You must be logged in to update your information.');
     return;
   }
          
     const name = document.getElementById('demoName').value;
-    const age = document.getElementById('demoAge').value;
+   const age2 = parseInt(document.getElementById('demoAge').value);
+  
     const phone = document.getElementById('demoPhone').value;
     const address = document.getElementById('demoAddress').value;
      
          
-         fetch('/update-demographics', {
+         fetch('http://localhost:3000/update-demographics', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        username, // include username to identify the user
         full_name: name,
-        age: age,
-        phone: phone,
-        address: address
+        age:age2,
+phone:phone,
+address:address
       })
 
     })
+     
     .then(response => response.json())
     .then(data => {
       // On success, show updated information on the page
@@ -277,7 +334,7 @@
       <div class="card p-3 shadow-sm" style="max-width: 500px; margin: auto;">
         <h5 class="mb-3"> Info Updated:</h5>
         <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Age:</strong> ${age}</p>
+        <p><strong>Age:</strong> ${age2}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Address:</strong> ${address}</p>
       </div>
@@ -288,10 +345,60 @@
             
          })
          
-          .catch(error => console.error('Error updating user info:', error));
-          alert('An error occurred while updating your information.');
+          .catch(error => {
+             console.log('Error updating user info:', error);
+         
+          alert('An error occurred while updating your information.')
+         });
   } 
-      
+    
+            
+            
+            
+const checkboxes = document.querySelectorAll('input[name="amenities[]"]');   
+const totalDisplay = document.getElementById('total');       
+const form = document.getElementById('amenitiesForm');
+            
+            
+
+function updateTotal() {
+  let total = 0;
+    const selectedAmenities = []; 
+  checkboxes.forEach(box => {
+    if (box.checked) {
+      const price = parseFloat(box.dataset.price);
+      if (!isNaN(price)) {
+    selectedAmenities.push({  name: box.value, price  });
+        total += price;
+      }
+    }
+  });
+  totalDisplay.textContent = total.toFixed(2);
+    
+    
+sessionStorage.setItem('amenities', JSON.stringify(selectedAmenities));
+sessionStorage.setItem('total', total.toFixed(2));
+}
+
+// Update on checkbox toggle
+checkboxes.forEach(box => {
+  box.addEventListener('change', updateTotal);
+});
+
+// Optional: initial total in case boxes are pre-checked
+window.addEventListener('load', updateTotal);
+
+// Form submit (still prevents reload and updates total one last time)
+form.addEventListener('submit', (event) => {
+  event.preventDefault();    
+  updateTotal();
+});
+            
+            
+            
+            
+            
+            
             
             
             
@@ -314,9 +421,24 @@
       console.error('Logout error:', error);
     });
   });
+ const currentDate = new Date();
 
+const day = new Date().getDate();
+
+   
+const randomOffset = Math.floor(Math.random() * 14) + 1;
+
+    const newDate = day + randomOffset;
             
+const currentMonth = currentDate.getMonth () + 2;
+const currentYear = currentDate.getFullYear();
+document.getElementById('current-month').innerText = currentMonth + '/';
+
+document.getElementById('nextbilling-day').innerText = newDate;
             
+ document.getElementById('current-year').innerText = '/' + currentYear ;
+            
+     
   </script>
     </body>
 

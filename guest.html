@@ -91,6 +91,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
         <button id="logoutBtn" class="btn">Logout</button>
+
       <div class="collapse navbar-collapse" id="navbarNav">
         
             <li class="nav-item">
@@ -182,13 +183,14 @@
          <h3> My guests
          </h3>
          
+
       <ul id="guestList" class="list-group mt-2">
         
     
         <button class="btn3" onclick="addCheckIn()">Check In</button>
-          <h5> Name: ken |
-              Phone: 7000000</h5>
+
    </ul>
+
         
     
     </div>
@@ -234,14 +236,11 @@
 
 const guestForm = document.getElementById("guestForm");
 const guestList = document.getElementById("guestList");
+    updateGuestList();
 
   guestForm.addEventListener("submit", function(event) {
     event.preventDefault(); // 
-      
-      
-      
-     
-                  
+          
 
 const Name = document.getElementById("guestName").value.trim();;
 const Phone = document.getElementById("guestPhone").value.trim();;
@@ -259,14 +258,16 @@ console.log("Age:", Age);
     }
 
 
-      const listItem = document.createElement("li");
-      listItem.className = "list-group-item";
-      listItem.textContent = `Name: ${Name} | Phone: ${Phone} | Age: ${Age}`;
-      guestList.appendChild(listItem);
-  
+//      const listItem = document.createElement("li");
+//      listItem.className = "list-group-item";
+//      listItem.textContent = `Name: ${Name} | Phone: ${Phone} | Age: ${Age}`;
+//      guestList.appendChild(listItem);
+//  
         
    
  let user_id = sessionStorage.getItem("user_id");
+      
+      
       if (!user_id) {
         user_id = Math.floor(Math.random() * 90000) + 10000;
         sessionStorage.setItem("user_id", user_id);
@@ -276,10 +277,10 @@ console.log("Age:", Age);
         method: "POST",
         headers: { "Content-Type": "application/json" },
        body: JSON.stringify({
-    user_id: 60801,  // The ID of the logged-in user
-    Name: 'John Doe',
-    Phone: '555-1234',
-    Age: 30,
+    user_id: user_id,  // The ID of the logged-in user
+    Name:  document.getElementById("guestName").value,
+    Phone: document.getElementById("guestPhone").value,
+    Age: document.getElementById("guestAge").value,
   }),
 })
  .then(res => {
@@ -295,29 +296,56 @@ console.log("Age:", Age);
     
 
   .catch(err => console.error("Register error:", err));
+      
+      updateGuestList();
+      
+      
+      
+    
+      
+    });  
+      let checkinCount = 0; 
+    
+   function updateGuestList (){
+       fetch ('/getallguests')
+       .then(res => res.json())
+             .then (data => {
+        //console.log("response:", data);
+        for (var key in data) {
+            const dict = data[key];
+            console.log(dict);
+     let li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerText = `Name: ${dict['name']} | Phone: ${dict['phone']} | Age: ${dict['age']} | Date: ${dict['datecreated']}`;
+           // guestList.appendChild(li);
+let checkInBtn = document.createElement('button');
+  checkInBtn.className = 'btn btn-success btn-sm ms-2';
+ checkInBtn.innerText = 'Check In';
+            
+ checkInBtn.onclick = () => {
+ alert(`Guest ${dict.name} checked in! Thank you.`);
+     
+     
+       checkinCount++;
+     
+     const countDisplay = document.getElementById('guests-checked-in');
+                    countDisplay.innerText = checkinCount;
 
-      
-      fetch("/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id :60801  })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("Check-in recorded:", data.message);
-        
-      })
-      .catch(err => {
-        console.error("Check-in error:", err);
- 
-
-     })
-      
-      
-      
-      
+    checkInBtn.disabled = true;
+    checkInBtn.innerText = 'Checked In';
+            };            
+            
+          
+             li.appendChild(checkInBtn);
+            
+              guestList.appendChild(li);
+            
+        }
+       });   
+   }
       
 
+  
   document.getElementById('logoutBtn').addEventListener('click', function () {
     // Send logout request to the server
     fetch('http://localhost:3000/logout', {
@@ -337,16 +365,18 @@ console.log("Age:", Age);
       console.error('Logout error:', error);
     });
   });
-       
-    });         
   
             
             
-        function updateCheckedInGuests(guestCount) {
+function updateCheckedInGuests(guestCount) {
     const guestsCheckedInElement = document.getElementById('guests-checked-in');
     guestsCheckedInElement.innerText = guestCount; // Update the guest count displayed in the DOM
   }
    
+       
+            
+            
+            
   </script>
         
         

@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(session({
   secret: 'password', // change to a strong random string in production
   resave: false,
-  saveUninitialized: true //false,
+  saveUninitialized: false //false,
 }));
 
 // Middleware to parse form data
@@ -27,7 +27,7 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: 'password', // use your MySQL password if needed
-  database: 'userdb' //userdb
+  database: 'storedb' //userdb
 });
 
 
@@ -55,16 +55,14 @@ app.listen(port, () => {
 
 app.get('/welcome', (req, res) => {
   if (!req.session.username) {
-    return res.redirect('/login'); // Redirect to login if user is not logged in
+    return res.redirect('http://localhost:3000/'); // Redirect to login if user is not logged in
+     
   }
 
   // If logged in, show the welcome page
    res.sendFile(path.join(__dirname, 'welcome.html'));
+    
 });
-
-
-
-
 
 
 
@@ -94,20 +92,21 @@ app.post('/register', (req, res) => {
       return res.status(409).send('Username already exists.');
     }
     
-       const insertSql = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    db.query(insertSql, [username, hashedPassword], (err2) => {
+       const insertSql = 'INSERT INTO users (username, password, billingDayOfMonth) VALUES (?, ?, ?)';
+      
+const currDate= new Date().getDate() ;
+
+   
+    db.query(insertSql, [username, hashedPassword, currDate], (err2) => {
       if (err2) {
         console.error('Insert error:', err2);
         return res.status(500).send('Could not create user.');
       }
-      res.redirect('/welcome');
-        return;
+       return res.redirect('http://localhost:3000/');
     });
+      
   });
 });
-
-
-
 
 
 
@@ -136,8 +135,12 @@ app.post('/login', (req, res) => {
     if (results.length > 0) {
          const storedHashedPassword = results[0].password;
        if (hashedPassword === storedHashedPassword) {
-        req.session.username = username;  // Set session if passwords match
-        return res.status(200).json({ message: 'Login successful' });
+        req.session.username = username;
+           
+    req.session.user_Id= results[0].id ;
+           // Set session if passwords match
+        
+      return res.redirect('/welcome');
       } else {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
@@ -147,6 +150,24 @@ app.post('/login', (req, res) => {
     }
   });
 });
+
+
+
+app.get('/api/username', (req, res) => {
+  if (req.session.username) {
+    res.json({ username: req.session.username });
+  } else {
+    res.status(401).json({ error: 'Not logged in' });
+  }
+});
+
+//app.get('/api/', (req, res) => {
+//  if (req.session.username) {
+//    res.json({ username: req.session.username });
+//  } else {
+//    res.status(401).json({ error: 'Not logged in' });
+//  }
+//});
 
 
 
@@ -162,8 +183,6 @@ app.post('/logout', (req, res) => {
 });
 
 
-
-
  
 
 // Serve guest.html on the /guest route
@@ -174,52 +193,57 @@ app.get('/guest', (req, res) => {
 // this is the guest reg
 app.post('/guest-register', (req, res) => {
       console.log("GUEST REGISTER HIT"); 
-     if (!req.session.username) {
-         return res.status(401).send('Unauthorized');
-    }
-        
+     
 
-  const { user_id, Name, Phone, Age } = req.body;
-     const dateformtime  = new Date().toISOString().slice(0, 19).replace('T', ' '); 
+  const {Name, Phone, Age } = req.body;
+     const datecreated  = new Date().toISOString().slice(0, 19).replace('T', ' '); 
 
-  if (!Name || !Phone ||!Age) {
-    return res.status(400).json({ message: 'All fields are required.' });
-  }
-    
-  const checkUserExistsQuery = 'SELECT * FROM users WHERE id = ?';
-  db.query(checkUserExistsQuery, [user_id], (err, results) => {
-    if (err) {
-      console.error('Error checking user existence:', err);
-      return res.status(500).json({ message: 'Error checking user existence.' });
-    }
-    
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    
+          console.log("test"); 
 
- const insertQuery = `
-    INSERT INTO storeDB.guests (user_id, name, phone, age, dateformtime )
-    VALUES (?, ?, ?, ?, ?)
+
+ const insertQuery = `INSERT INTO storeDB.guest3 (id, name, phone, age, datecreated, affilUser ) VALUES (?, ?, ?, ?, ?, ?)
   `;
-    
-  db.query(insertQuery, [user_id, Name, Phone, Age, dateformtime], (err, results) => {
+    const min = 100000;
+  const max = 999999;
+  const uid = Math.floor(Math.random() * (max - min + 1)) + min;
+  db.query(insertQuery, [uid, Name, Phone, Age, datecreated,req.session.user_Id ], (err, results) => {
     if (err) {
         console.error('Guest Register DB Error:', err);
       return res.status(500).json({ message: 'Error adding guest to the database.' });
     }
-const newGuestId = results.insertId; // Get the new guest's ID from the database
+ // Get the new guest's ID from the database
+      const formattedDate = new Date(datecreated).toLocaleDateString('en-US');
+
     res.status(200).json({
       message: 'Guest successfully registered!',
-      guestId: newGuestId,
-      Name,
+      guestId:uid ,     
+        Name,
       Phone,
-      Age
+      Age,
+     datecreated :formattedDate
     });
   });
 
+
 });
+
+
+
+app.get('/getallguests', (req, res)  => {
+   const checkSql = 'SELECT * FROM guest3 WHERE affilUser = ?' ;
+  db.query(checkSql, [req.session.user_Id],(err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).send('Server error');
+    }
+      res.send(results);
+  });
+        
 });
+
+
+
+
 
 
 
@@ -239,13 +263,20 @@ app.post('/checkin', (req, res) => {
     FROM storeDB.checkins
     WHERE checkin_date = ?
   `;
+     const updateGuestQuery = `
+    UPDATE guest3 SET checked_in = 1 WHERE id = ?
+  `;
 
   db.query(query, [user_id, today], (err, result) => {
     if (err) {
       console.error('Error checking in:', err);
       return res.status(500).json({ message: 'Internal server error' });
     }
-
+db.query(updateGuestQuery, [user_id], (err, updateResult) => {
+      if (err) {
+        console.error('Error updating guest3:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
 
     
     db.query(countQuery, [today], (err, countResult) => {
@@ -260,6 +291,8 @@ app.post('/checkin', (req, res) => {
     });
       });
     });
+     });
+   
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
@@ -269,49 +302,104 @@ app.listen(port, () => {
 
 
 
+
+
     app.post('/update-demographics', (req, res) => {
   const username = req.session.username;
+    console.log(username);   
         
-  
-  if (!username) {
-    console.error('User not logged in. Session missing username.');
-    return res.status(401).json({ error: 'Unauthorized, please log in.' });
-  }
-  
-  const { full_name, age, phone, address } = req.body;
-
-  const getUserIdQuery = 'SELECT id FROM users WHERE username = ?';
-  db.query(getUserIdQuery, [username], (err, results) => {
+ const checkSql = 'SELECT COUNT(*) AS count FROM profile WHERE user_id = ?';
+  db.query(checkSql, [username], (err, results) => {
     if (err) {
-      console.error('Error fetching user ID:', err);
-      return res.status(500).json({ error: 'Server error while fetching user ID.' });
+      console.error('Database error:', err);
+      return res.status(500).send('Server error');
     }
 
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
+const { full_name, age, phone, address } = req.body;
 
-    const userId = results[0].id;
+ if (results[0].count > 0) {
 
-    // Update the user_profiles table
-    const updateSql = `
-      UPDATE user_profiles
+     const updateSql = `
+      UPDATE profile
       SET full_name = ?, age = ?, phone = ?, address = ?
       WHERE user_id = ?
     `;
     
-    db.query(updateSql, [full_name, age, phone, address, userId], (err2, results2) => {
+    db.query(updateSql, [full_name, age, phone, address, username], (err2, results2) => {
       if (err2) {
         console.error('Update error:', err2);
-        return res.status(500).json({ error: 'Error updating user information.' });
+        return res.status(500).json({ error: 'Error updating user information.'+err2 });
       }
 
       // Return a successful response in JSON format
       res.status(200).json({ message: 'Demographic information updated successfully.' });
+  
+    
     });
+      
+    }  else{
+          console.log("Start Insert Statement");
+          const insertSql = 'INSERT INTO profile (user_id, full_name, age, phone, address) VALUES (?, ?, ?, ?,?)';
+          console.log("username for insert: " + username);
+    db.query(insertSql, [username, full_name,age,phone, address], (err2) => {
+      if (err2) {
+        console.error('Insert error:', err2);
+        return res.status(500).send('Could not create user.');
+      }
+      res.status(200).json({ message: 'Demographic information updated successfully.' });
+    });
+     }
   });
 });
+ 
+        
+
+   app.post('/submit-preference', (req, res) => {
+  const gympreference  = req.body.gymPreference;
+        if (!gympreference) {
+    return res.status(400).send('No gym preference selected.');
+  }
+        const query = 'INSERT INTO preferences (gymPreference) VALUES (?)';
+       
+   db.query(query, [gympreference], (err, result) => {
+    if (err) {
+      console.error('Error inserting preference:', err);
+      res.status(500).send('Server error');
+      return;
+    }
+      
+  });
+});
+
+
 // Catch-all for unknown routes
+
+
+app.post('/amenities', (req,res) =>{
+ const userId = req.session.user_id; 
+    const {amenities} = req.body; 
+   
+   if (!userId) return res.status(401).send('Unauthorized');
+
+  const amenityPrices = {
+    "Wi-Fi": 10,
+    "locker": 5,
+    "pool": 20
+  };        
+          
+  const selected = Array.isArray(amenities) ? amenities : [amenities];
+  const values = selected.map(a => [userId, a, amenityPrices[a]]);
+
+  const sql = 'INSERT INTO amenity_selections (user_id, amenity, price) VALUES ?';
+  db.query(sql, [values], (err, result) => {
+    if (err) return res.status(500).send('DB Error');
+    res.send('Amenities submitted!');
+  });        
+          
+});
+
+
+
 app.use((req, res) => {
   res.status(404).send('Not Found');
 });
